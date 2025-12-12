@@ -86,9 +86,9 @@ image.json defines the combination of 2D image and 3D segmentation tiles.
 Requirement [NodeJS](https://nodejs.org/en/).
 Example work-flow:
 
-1. Clone the repository
-2. Install dependencies via `npm install`
-3. For development: start a hot-reloading dev server with `npm run start`
+1. Clone the repository: `git clone https://github.com/3DxN/AIDA-3D-OMAL`
+2. Install dependencies: `npm install` (First install Node Package Manager (npm) if required)
+3. For development: start a hot-reloading dev server: `npm run start`
 4. For deployment: bundle together with `npm run build`
 
 ## Support for tiled images, International Image Interoperability Framework (IIIF)
@@ -110,6 +110,12 @@ On MacOS:
 brew install vips
 vips dzsave input.tif output_folder --suffix .jpg
 ```
+
+Remarks: 
+- All tiles need to be stored in a single image file `input.tif`, containing a preset marging between tiles of, e.g., 25 pixels.
+- Input images may contain RGBA values.
+- Several layers can be stacked on top of each other. To preserve transparency (alpha) in layers (useful for, e.g., label images), prefer `png` or `webm` tiles in DZI output, e.g., run `vips dzsave input.tif output_folder --suffix .png` instead of `vips dzsave input.tif output_folder --suffix .jpg`.
+
 
 [Full instructions and Windows binaries can be found on the libvips page](https://github.com/libvips/libvips?tab=readme-ov-file#install). 
 
