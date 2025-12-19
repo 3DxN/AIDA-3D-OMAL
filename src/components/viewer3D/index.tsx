@@ -30,10 +30,11 @@ const cleanMaterial = (material: THREE.Material) => {
 const Viewer3D = (props: {
 	tile: [number, number]
 	tilesUrl: string
+	fileNamePattern3D: any
 	polygonCoords: number[][][]
 	setSelect3D: (select3D: boolean) => void
 }) => {
-	const { tile, tilesUrl, polygonCoords, setSelect3D } = props
+	const { tile, tilesUrl, fileNamePattern3D, polygonCoords, setSelect3D } = props
 
 	const [content, setContent] = useState(null)
 	const [scene, setScene] = useState<Scene | undefined>(undefined)
@@ -107,7 +108,12 @@ const Viewer3D = (props: {
 			const V = padToTwo(tile[1])
 			const newLoader = new GLTFLoader()
 
-			const url = `${tilesUrl}/tile__H0${H}_V0${V}.tif__.gltf`
+			function compileTemplate(template:string) { return new Function("data", "return `" + template + "`;"); }
+
+			const templateUrl = fileNamePattern3D.meshFile??"${data.tilesUrl}/tile__H0${data.H}_V0${data.V}.tif__.gltf"
+			const renderMeshUrlTemplate = compileTemplate(templateUrl)
+			const url = renderMeshUrlTemplate({tilesUrl: tilesUrl, "H": H, "V": V })
+			console.log("URL for 3D mesh data: " + url)
 
 			if (scene) {
 				scene.clear()
@@ -193,7 +199,13 @@ const Viewer3D = (props: {
 		if (tile) {
 			const H = padToTwo(tile[0])
 			const V = padToTwo(tile[1])
-			const url = `${tilesUrl}/tile__H0${H}_V0${V}.tif__.json`
+
+			function compileTemplate(template:string) { return new Function("data", "return `" + template + "`;"); }
+
+			const templateUrl = fileNamePattern3D.featureFile??"${data.ilesUrl}/tile__H0${data.H}_V0${data.V}.tif__.json"
+			const renderFeaturesUrlTemplate = compileTemplate(templateUrl)
+			const url = renderFeaturesUrlTemplate({tilesUrl: tilesUrl, "H": H, "V": V })
+			console.log("URL for 3D feature/attribute data: " + url)
 
 			fetch(url).then((featureDataFile) => {
 				featureDataFile.json().then((data) => setFeatureData(data))

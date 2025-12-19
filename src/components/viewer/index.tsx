@@ -10,8 +10,10 @@ const Viewer = (props: {
 	imageUrls: string[]
 	annotationData: Annotation
 	tilesUrl: string
+	tileLayout2D: any
+	fileNamePattern3D: any
 }) => {
-	const { imageUrls, annotationData, tilesUrl } = props
+	const { imageUrls, annotationData, tilesUrl, tileLayout2D, fileNamePattern3D} = props
 
 	const [tile, setTile] = useState<[number, number]>()
 	const [select3D, setSelect3D] = useState(null)
@@ -24,6 +26,7 @@ const Viewer = (props: {
 					imageUrls={imageUrls}
 					annotationData={annotationData}
 					setTile={setTile}
+					tileLayout2D={tileLayout2D}
 					select3D={select3D}
 					setPolygonCoords={setPolygonCoords}
 				/>
@@ -32,6 +35,7 @@ const Viewer = (props: {
 				<Viewer3D
 					tile={tile}
 					tilesUrl={tilesUrl}
+					fileNamePattern3D={fileNamePattern3D}
 					setSelect3D={setSelect3D}
 					polygonCoords={polygonCoords}
 				/>
