@@ -1,0 +1,17 @@
+{
+  "images": [
+	  "image-dz/stitched_hne.dzi",
+	  "image-dz/stitched_cd8_webp.dzi",
+	  "image-dz/stitched_gH2aX_webp.dzi"
+  ],
+  "tiles": "image-tiles",
+  "layout2D": {
+    "gutter": 50, 
+    "tileSize": 682, 
+    "overlap": 0
+  },
+  "fileNamePattern3D":{
+    "meshFile": "${data.tilesUrl}/tile__H0${data.H}_V0${data.V}.tif__.gltf", 
+    "featureFile": "${data.tilesUrl}/tile__H0${data.H}_V0${data.V}.tif__gh2ax.json"
+  }
+}
