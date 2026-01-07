@@ -37,6 +37,9 @@ yarn-error.log*
 # local data
 /local/data/*
 !/local/data/README.md
+!/local/data/image-dz
+!/local/data/image.json
+!/local/data/image-tiles
 
 # typescript build content
 tsconfig.tsbuildinfo
