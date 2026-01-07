@@ -220,10 +220,10 @@ const Viewer = (props: {
 			vectorLayer.set('type', 'grid')
 			map.addLayer(vectorLayer)
 
-			const gutter = tileLayout2D.gutter ?? 25
-			const tileSize = tileLayout2D.tileSize ?? 302
-			const overlap = tileLayout2D.overlap ?? 0
-			console.log(`2D layout configuration: Gutter: ${tileLayout2D.gutter??-1}, tileSize: ${tileLayout2D.tileSize??-1}, overlap: ${tileLayout2D.overlap??-1}`)
+			const gutter = tileLayout2D?.gutter ?? 25
+			const tileSize = tileLayout2D?.tileSize ?? 302
+			const overlap = tileLayout2D?.overlap ?? 0
+			console.log(`2D layout configuration: Gutter: ${tileLayout2D?.gutter??-1}, tileSize: ${tileLayout2D?.tileSize??-1}, overlap: ${tileLayout2D?.overlap??-1}`)
 			const gridSize = tileSize - overlap
 			const cols = Math.floor(imageWidth / tileSize)
 			const rows = Math.floor(imageHeight / tileSize)
