@@ -88,7 +88,7 @@ Example work-flow:
 
 1. Clone the repository: `git clone https://github.com/3DxN/AIDA-3D-OMAL`
 2. Install dependencies: `npm install` (First install Node Package Manager (npm) if required)
-3. For development: start a hot-reloading dev server: `npm run start`
+3. For development: start a hot-reloading dev server: `npm run dev`
 4. For deployment: bundle together with `npm run build`
 
 ## Support for tiled images, International Image Interoperability Framework (IIIF)
