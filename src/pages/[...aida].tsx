@@ -47,6 +47,9 @@ const AIDA = () => {
 	const [imageName, setImageName] = useState('')
 	const [tilesUrl, setTilesUrl] = useState('')
 
+	const [tileLayout2D, setTileLayout2D] = useState() // {"gutter": 25, "tileSize": 302, "overlap": 0}
+	const [fileNamePattern3D, setFileNamePattern3D] = useState() // {meshFile:"tile__H0${H}_V0${V}.gltf", featureFile: "tile__H0${H}_V0${V}.json}
+
 	const [annotationData, setAnnotationData] = useState(defaultAnnotation)
 	const [isLoading, setIsLoading] = useState(true)
 
@@ -80,6 +83,9 @@ const AIDA = () => {
 							}
 						}
 
+						setTileLayout2D(projectResponseJson.layout2D)
+						setFileNamePattern3D(projectResponseJson.fileNamePattern3D)
+
 						// Extract tiles
 						setTilesUrl(`${defaultDataHost}/${projectResponseJson.tiles}`)
 					}
@@ -98,6 +104,8 @@ const AIDA = () => {
 				<Viewer
 					imageUrls={imageUrls}
 					tilesUrl={tilesUrl}
+					tileLayout2D={tileLayout2D}
+					fileNamePattern3D={fileNamePattern3D}
 					annotationData={annotationData}
 				/>
 			)}

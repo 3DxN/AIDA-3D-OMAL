@@ -26,12 +26,13 @@ import { Annotation } from '../../types/annotation'
 
 const Viewer = (props: {
 	imageUrls: string[]
+	tileLayout2D: any
 	annotationData: Annotation
 	setTile: (tile: [number, number]) => void
 	setPolygonCoords: (coords: [number, number][]) => void
 	select3D: boolean
 }) => {
-	const { imageUrls, annotationData, setTile, setPolygonCoords, select3D } =
+	const { imageUrls, tileLayout2D, annotationData, setTile, setPolygonCoords, select3D } =
 		props
 
 	const [map, setMap] = useState<Map>()
@@ -47,8 +48,9 @@ const Viewer = (props: {
 			const map = new Map({ controls: [] })
 			let imageWidth = 0
 			let imageHeight = 0
-
+			
 			const baseImageUrl = imageUrls[0]
+			console.log("baseImageUrl: " + baseImageUrl)
 			const baseImageExt = baseImageUrl.split('.').pop()
 			const baseImageName = baseImageUrl.split('/').pop()
 
@@ -218,11 +220,10 @@ const Viewer = (props: {
 			vectorLayer.set('type', 'grid')
 			map.addLayer(vectorLayer)
 
-			// TODO: dynamically set this tileSize from either user input of a
-			//			 configuration file.
-			const gutter = 25
-			const tileSize = 682 // Value in original demo: 302
-			const overlap = 0
+			const gutter = tileLayout2D?.gutter ?? 25
+			const tileSize = tileLayout2D?.tileSize ?? 302
+			const overlap = tileLayout2D?.overlap ?? 0
+			console.log(`2D layout configuration: Gutter: ${tileLayout2D?.gutter??-1}, tileSize: ${tileLayout2D?.tileSize??-1}, overlap: ${tileLayout2D?.overlap??-1}`)
 			const gridSize = tileSize - overlap
 			const cols = Math.floor(imageWidth / tileSize)
 			const rows = Math.floor(imageHeight / tileSize)
