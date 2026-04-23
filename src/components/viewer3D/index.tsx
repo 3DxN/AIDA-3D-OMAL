@@ -15,6 +15,10 @@ import Toolbar from './toolbar'
 // Utils
 import { padToTwo, resizeRendererToDisplaySize } from './utils'
 
+type AxisName = 'x' | 'y' | 'z'
+
+const axisNames: AxisName[] = ['x', 'y', 'z']
+
 const cleanMaterial = (material: THREE.Material) => {
 	material.dispose()
 
@@ -25,6 +29,66 @@ const cleanMaterial = (material: THREE.Material) => {
 			value.dispose()
 		}
 	}
+}
+
+const createAxisRow = (axis: AxisName, sign = 1) => {
+	switch (axis) {
+		case 'x':
+			return [sign, 0, 0, 0]
+		case 'y':
+			return [0, sign, 0, 0]
+		default:
+			return [0, 0, sign, 0]
+	}
+}
+
+const axisVector = (axis: AxisName) => {
+	switch (axis) {
+		case 'x':
+			return new THREE.Vector3(1, 0, 0)
+		case 'y':
+			return new THREE.Vector3(0, 1, 0)
+		default:
+			return new THREE.Vector3(0, 0, 1)
+	}
+}
+
+const alignContentToLayout = (object: THREE.Object3D) => {
+	const originalBox = new THREE.Box3().setFromObject(object)
+	const size = originalBox.getSize(new THREE.Vector3())
+	const depthAxis = axisNames.reduce((smallestAxis, axis) =>
+		size[axis] < size[smallestAxis] ? axis : smallestAxis
+	)
+	const horizontalAxis: AxisName = depthAxis === 'x' ? 'z' : 'x'
+	const verticalAxis =
+		axisNames.find(
+			(axis) => axis !== depthAxis && axis !== horizontalAxis
+		) ?? 'y'
+	const depthSign =
+		axisVector(depthAxis).cross(axisVector(verticalAxis)).dot(axisVector(horizontalAxis)) >
+		0
+			? 1
+			: -1
+
+	// Canonicalise the tile so depth runs along x and the 2D tile plane is z/y.
+	const alignmentMatrix = new THREE.Matrix4().set(
+		...createAxisRow(depthAxis, depthSign),
+		...createAxisRow(verticalAxis, -1),
+		...createAxisRow(horizontalAxis),
+		0,
+		0,
+		0,
+		1
+	)
+
+	object.applyMatrix4(alignmentMatrix)
+	object.updateMatrixWorld(true)
+
+	const alignedBox = new THREE.Box3().setFromObject(object)
+	object.position.sub(alignedBox.min)
+	object.updateMatrixWorld(true)
+
+	return new THREE.Box3().setFromObject(object)
 }
 
 const Viewer3D = (props: {
@@ -137,49 +201,29 @@ const Viewer3D = (props: {
 				setIsLoading(false)
 
 				const newContent = gltf.scene
-				scene.add(gltf.scene)
+
+				// Normalise the tile orientation so the 3D view and the 2D tile
+				// layout use the same in-tile plane across datasets.
+				const box = alignContentToLayout(newContent)
+				scene.add(newContent)
 				setContent(newContent)
 
-				// The model is orientated poorly, doesn't match up with the 2D
-				// Do some manual rotations/reflections in order to algin correctly.
-
-				// TODO: Remove following hack.
-				// HACK: this specific example tile model from CellPose is orientated
-				//       differently from the rest. Need to reorient it. This should be
-				//       temporary until the 3D models are all consistent.
-				if (H === '12' && V === '11') {
-					newContent.applyMatrix4(new THREE.Matrix4().makeScale(1, -1, 1))
-					newContent.rotateX(Math.PI / 2)
-					newContent.rotateZ(Math.PI / 2)
-					newContent.rotateY(Math.PI)
-					newContent.translateZ(-460)
-				} else {
-					// Reflect on y-axis
-					newContent.applyMatrix4(new THREE.Matrix4().makeScale(1, -1, 1))
-					newContent.rotateX(Math.PI / 2)
-					newContent.rotateZ(Math.PI / 2)
-					newContent.rotateY(Math.PI)
-					newContent.translateZ(-302)
-				}
+				// The legacy viewer used per-tile manual rotations here. Alignment is
+				// now handled once by alignContentToLayout above.
 
 				// Setup the space for the new object
 				// This is from three-gltf-viewer
-				const box = new THREE.Box3().setFromObject(newContent)
 				const size = box.getSize(new THREE.Vector3()).length()
 				const center = box.getCenter(new THREE.Vector3())
-
-				const midX = (box.max.x - box.min.x) / 2
 				const midY = (box.max.y - box.min.y) / 2
 				const midZ = (box.max.z - box.min.z) / 2
 
 				camera.near = size / 100
 				camera.far = size * 100
 
-				// Currently set by trial an error
-				// TODO: should be programmatic, set distance from model dynamically
-				//       based on model size.
+				const cameraDistance = size * 1.5
 				const cameraPos = scene.localToWorld(
-					new THREE.Vector3(-1500, midY, midZ)
+					new THREE.Vector3(center.x - cameraDistance, midY, midZ)
 				)
 				camera.position.copy(cameraPos)
 				camera.lookAt(center)
@@ -192,7 +236,7 @@ const Viewer3D = (props: {
 				renderer.render(scene, camera)
 			})
 		}
-	}, [tile, camera, scene, renderer, tilesUrl])
+	}, [tile, camera, scene, renderer, tilesUrl, fileNamePattern3D?.meshFile])
 
 	// Update feature data
 	useEffect(() => {
@@ -211,18 +255,18 @@ const Viewer3D = (props: {
 				featureDataFile.json().then((data) => setFeatureData(data))
 			})
 		}
-	}, [tile, tilesUrl])
+	}, [tile, tilesUrl, fileNamePattern3D?.featureFile])
 
 	// Adjust selections from the 2D viewer
-	// When new polygon coords are provided we created an extruded shape in the
-	// xy plane and select all nuclei whose center intersects with the extruded
-	// shape.
+	// When new polygon coords are provided we project nuclei into the aligned
+	// in-tile layout plane and select those whose centers fall inside the polygon.
 	useEffect(() => {
 		// Reset any previous selection
 		setSelected([])
 
-		if (polygonCoords && polygonCoords.length > 0) {
+		if (polygonCoords && polygonCoords.length > 0 && content && renderer) {
 			const selectedNuclei = []
+			const contentBox = new THREE.Box3().setFromObject(content)
 
 			// Check if nuclei is inside polygon, if yes, set as selected
 			content.children.forEach((child, index) => {
@@ -236,9 +280,13 @@ const Viewer3D = (props: {
 					const sphere = nucleus.geometry.boundingSphere.clone()
 					nucleus.localToWorld(sphere.center)
 					const center = sphere.center
+					const layoutPoint = [
+						center.z - contentBox.min.z,
+						center.y - contentBox.min.y,
+					]
 
 					// Exclude the nucleus if its center point is outside the polygon
-					if (checkPointInPolygon(polygonCoords, [center.z, center.y]) > 0) {
+					if (checkPointInPolygon(polygonCoords, layoutPoint) > 0) {
 						match = false
 					}
 
