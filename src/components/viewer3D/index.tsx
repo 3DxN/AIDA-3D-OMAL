@@ -73,7 +73,7 @@ const alignContentToLayout = (object: THREE.Object3D) => {
 	// Canonicalise the tile so depth runs along x and the 2D tile plane is z/y.
 	const alignmentMatrix = new THREE.Matrix4().set(
 		...createAxisRow(depthAxis, depthSign),
-		...createAxisRow(verticalAxis, -1),
+		...createAxisRow(verticalAxis, -1), // Flip the vertical axis to match the 2D tile layout where y increases downwards.
 		...createAxisRow(horizontalAxis),
 		0,
 		0,
